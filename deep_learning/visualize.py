@@ -782,12 +782,181 @@ def test_wind() -> np.ndarray:
     return result
 
 
-import matplotlib.pyplot as plt
-import numpy as np
-import matplotlib.patches as patches
+def plot_weather_data_medium(
+    weather_data: np.ndarray,
+    time: str,
+    height: str = "all",
+    grid_spacing=1,
+    arrow_length_scale=1 / 20,
+    arrow_width=0.23,
+    margin=1,
+    show_background: bool = True,
+    custom_name: str = None,
+):
+    assert weather_data.shape == (13, 13, 3, 3)
+    assert np.all(
+        weather_data[:, :, :, 0] >= 0
+    )  # Assert positive wind speed, should not be scaled
+
+    match height:
+        case "10m":
+            weather_data = weather_data[:, :, 0, :]
+        case "80m":
+            weather_data = weather_data[:, :, 1, :]
+        case "120m":
+            weather_data = weather_data[:, :, 2, :]
+        case "avg":
+            weather_data = np.average(weather_data, axis=3)
+        case "all":
+            pass
+        case _:
+            raise ValueError()
+
+    n_latitude, n_longitude = weather_data.shape[0:2]
+
+    # Reduced figure size by half
+    fig_height, fig_width = 2.6, 2.6  # 2.0, 2.0
+    (fig, ax) = plt.subplots(1, 1, layout="constrained")
+    fig.set_figheight(fig_height)
+    fig.set_figwidth(fig_width)
+
+    x_tails = np.arange(0, n_longitude * grid_spacing, grid_spacing)
+    y_tails = np.arange(0, n_latitude * grid_spacing, grid_spacing)
+
+    if height == "all":
+        u = (
+            weather_data[:, :, :, 0] * arrow_length_scale * weather_data[:, :, :, 2]
+        )  # sine
+        v = (
+            weather_data[:, :, :, 0] * arrow_length_scale * weather_data[:, :, :, 1]
+        )  # cosine
+
+        ax.quiver(
+            x_tails,
+            y_tails,
+            u[:, :, 0],
+            v[:, :, 0],
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            headwidth=arrow_width * grid_spacing / arrow_length_scale,
+            headlength=0.275 * grid_spacing / arrow_length_scale,
+            fc="red",
+            ec="none",  # Remove border
+            linewidth=0,
+            label="10m",
+        )
+        ax.quiver(
+            x_tails,
+            y_tails,
+            u[:, :, 1],
+            v[:, :, 1],
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            headwidth=arrow_width * grid_spacing / arrow_length_scale,
+            headlength=0.275 * grid_spacing / arrow_length_scale,
+            fc="green",
+            ec="none",  # Remove border
+            linewidth=0,
+            label="80m",
+        )
+        ax.quiver(
+            x_tails,
+            y_tails,
+            u[:, :, 2],
+            v[:, :, 2],
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            headwidth=arrow_width * grid_spacing / arrow_length_scale,
+            headlength=0.275 * grid_spacing / arrow_length_scale,
+            fc="blue",
+            ec="none",  # Remove border
+            linewidth=0,
+            label="120m",
+        )
+    else:
+        u = weather_data[:, :, 0] * arrow_length_scale * weather_data[:, :, 2]  # sine
+        v = weather_data[:, :, 0] * arrow_length_scale * weather_data[:, :, 1]  # cosine
+
+        ax.quiver(
+            x_tails,
+            y_tails,
+            u,
+            v,
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            headwidth=arrow_width * grid_spacing / arrow_length_scale,
+            headlength=0.275 * grid_spacing / arrow_length_scale,
+            fc="blue",
+            ec="none",  # Remove border
+            linewidth=0,
+            label=height,
+        )
+
+    x_end = -margin, (n_longitude - 1) * grid_spacing + margin
+    y_end = -margin, (n_latitude - 1) * grid_spacing + margin
+    ax.set_xlim(x_end)
+    ax.set_ylim(y_end)
+
+    if show_background:
+        background = plt.imread(SHADOW_MAP_35_BY_35_PATH)
+        ax.imshow(background, extent=[*x_end, *y_end], alpha=0.4)
+
+    # Set ticks to show first, center, and last values
+    x_center_idx = n_longitude // 2
+    y_center_idx = n_latitude // 2
+    ax.set_xticks([x_tails[0], x_tails[x_center_idx], x_tails[-1]])
+    ax.set_xticklabels(
+        ["10.07", "10.38", "10.69"],
+        rotation=0,
+        fontsize=8,
+    )
+
+    ax.set_yticks([y_tails[0], y_tails[y_center_idx], y_tails[-1]])
+    ax.set_yticklabels(
+        ["64.00", "64.13", "64.27"],
+        rotation=90,
+        fontsize=8,
+    )
+
+    ax.set_aspect("equal")
+
+    # Remove axis labels
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+
+    ax.grid(True)
+
+    if height == "all":
+        ax.legend(
+            loc="center right",
+            ncol=3,
+            bbox_to_anchor=(0.925, 1.055),
+            fontsize=6,
+            handles=[
+                patches.Patch(color="red", label="10m"),
+                patches.Patch(color="green", label="80m"),
+                patches.Patch(color="blue", label="120m"),
+            ],
+        )
+    else:
+        ax.legend(
+            loc="center right",
+            bbox_to_anchor=(0.925, 1.055),
+            fontsize=6,
+            handles=[patches.Patch(color="blue", label=height)],
+        )
+
+    if custom_name is None:
+        custom_name = f"wind_plot_{str(time)[:-6]}.pdf"
+    plt.savefig(custom_name, format="pdf")
+    plt.close()
 
 
-def plot_weather_data_new(
+def plot_weather_data_small(
     weather_data: np.ndarray,
     time: str,
     height: str = "all",
@@ -1025,7 +1194,7 @@ if __name__ == "__main__":
         #     x_tensor[time_index, 5, :, :, :, 1] = -np.sqrt(2) / 2
         #     x_tensor[time_index, 5, :, :, :, 2] = np.sqrt(2) / 2
 
-        plot_weather_data_new(
+        plot_weather_data_small(
             x_tensor[time_index][5].detach().cpu().numpy(),
             time_stamp_ex,
             height="all",

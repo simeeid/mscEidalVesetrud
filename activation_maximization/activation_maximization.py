@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from mscEidalVesetrudUnofficial.deep_learning.neural_nets import IndexableModule
 from mscEidalVesetrudUnofficial.global_constants import (
     CONTAINING_FOLDER,
+    SEEDS,
     TRAIN_DATA_PATH,
     TRAIN_SIZE,
     VAL_SIZE,
@@ -17,9 +18,84 @@ from mscEidalVesetrudUnofficial.data_preprocessing.prepare_load_dataset import (
     load_cross_val,
 )
 from mscEidalVesetrudUnofficial.deep_learning.visualize import (
-    plot_weather_data,
+    plot_weather_data_medium,
     plot_weather_data_time,
 )
+from scipy.stats import circstd, circmean
+
+
+def visualize_wind(
+    weather_data: np.ndarray, timestamps: pd.DatetimeIndex, save_as_pdf: bool = False
+):
+
+    if save_as_pdf:
+        for i in range(11):
+            plot_weather_data_medium(
+                weather_data[i],
+                timestamps[i],
+                height="all",
+                arrow_length_scale=0.6 / 20,
+                arrow_width=0.15,
+                show_background=True,
+                custom_name=f"act_max_wind_{i}.pdf",
+            )
+
+    else:
+        plot_weather_data_time(weather_data, timestamps)
+
+
+def variability_avg_stats(
+    weather_data: np.ndarray, times_of_year: np.ndarray, times_of_day: np.ndarray
+) -> tuple[np.ndarray, float, float]:
+    assert weather_data.shape[1:] == (11, 13, 13, 3, 3)
+
+    weather_degrees = np.rad2deg(
+        np.arctan2(weather_data[:, :, :, :, :, 2], weather_data[:, :, :, :, :, 1])
+    )
+    weather_std = np.std(weather_data[:, :, :, :, :, 0], axis=0)
+
+    weather_circstd = circstd(weather_degrees, axis=0, high=360, low=0)
+
+    print(f"Average circular std (degrees): {np.average(weather_circstd):.4e}")
+    print(
+        f"Average speed std (m/s)         : {np.average(weather_std):.4e}",
+    )
+
+    print(
+        f"Average circular std year (days): {np.average(circstd(times_of_year) * 365 / (2 * np.pi)):.4e}"
+    )
+    print(
+        f"Average circular std day (hours): {np.average(circstd(times_of_day) * 24 / (2 * np.pi)):.4e}",
+    )
+
+    return (
+        np.average(weather_data, axis=0),
+        float(circmean(times_of_year)),
+        float(circmean(times_of_day)),
+    )
+
+
+def time_of_year_and_day_to_timestamp(
+    time_of_year: np.ndarray, time_of_day: np.ndarray
+) -> pd.DatetimeIndex:
+    # Converts the hour in the day and the day in the year to a pandas date in 2100
+    # 2100 is not a leap year
+    # The day in the year will not affect the hour at all, that is only affected by the time of day
+
+    hour = ((np.asarray(time_of_day) / (2 * np.pi)) % 1.0) * 24
+    day_in_year = ((np.asarray(time_of_year) / (2 * np.pi)) % 1.0) * 365
+
+    year = np.asarray(2100) - 1970
+    types = ("<M8[Y]", "<m8[D]", "<m8[h]")
+    vals = (year, day_in_year, hour)
+    center_time = pd.Timestamp(sum(np.asarray(v, dtype=t) for t, v in zip(types, vals)))
+
+    timestamps = pd.date_range(
+        center_time - pd.Timedelta(hours=5),
+        center_time + pd.Timedelta(hours=5),
+        freq="h",
+    )
+    return timestamps
 
 
 class OptimizableWindInput(nn.Module):
@@ -97,15 +173,15 @@ class OptimizableWindInput(nn.Module):
         plt.legend()
         plt.show()
 
-    def visualize_wind(self, save_as_pdf: bool = False):
-
-        center_time = self.__timestamp
-        timestamps = pd.date_range(
-            center_time - pd.Timedelta(hours=5),
-            center_time + pd.Timedelta(hours=5),
-            freq="h",
+    @property
+    def time_of_year_day(self) -> tuple[float, float]:
+        return (
+            float(self.time_of_year.detach().cpu().numpy()[0]),
+            float(self.time_of_day.detach().cpu().numpy()[0]),
         )
 
+    @property
+    def weather_data(self) -> np.ndarray:
         weather_data = (
             torch.cat(
                 (
@@ -119,35 +195,14 @@ class OptimizableWindInput(nn.Module):
             .cpu()
             .numpy()
         ).reshape(11, 13, 13, 3, 3)
-        if save_as_pdf:
-            for i in range(11):
-                plot_weather_data(
-                    weather_data[i], timestamps[i], custom_name=f"act_max_wind_{i}.pdf"
-                )
-        else:
-            plot_weather_data_time(weather_data, timestamps)
+
+        return weather_data
 
     def clip_wind(self):
         with torch.no_grad():
             self.wind_speed_tensor.data = torch.clamp_(
                 self.wind_speed_tensor.data, min=0, max=None
             )
-
-    @property
-    def __timestamp(self):
-        # Converts the hour in the day and the day in the year to a pandas date in 2100
-        # 2100 is not a leap year
-        # The day in the year will not affect the hour at all, that is only affected by the time of day
-
-        hour = (((self.time_of_day / (2 * torch.pi)) % 1.0) * 24).detach().cpu().numpy()
-        day_in_year = (
-            (((self.time_of_year / (2 * torch.pi)) % 1.0) * 365).detach().cpu().numpy()
-        )
-
-        year = np.asarray(2100) - 1970
-        types = ("<M8[Y]", "<m8[D]", "<m8[h]")
-        vals = (year, day_in_year, hour)
-        return pd.Timestamp(sum(np.asarray(v, dtype=t) for t, v in zip(types, vals))[0])
 
     def forward(self, x):
 
@@ -255,32 +310,51 @@ def run_activation_maximization(
     model_wind_scaling_std: np.ndarray,
     layer_name: str,
     layer_selection: int | torch.Tensor,
+    loss_fn,
     device: str,
     visualize_initial_wind: bool = False,
+    visualize_end_wind: bool = False,
     save_as_pdf: bool = False,
-):
+    n_epochs: int = 500,
+    learning_rate: float = 0.2,
+) -> tuple[np.ndarray, float, float, float]:
 
     optimizable_wind_input = OptimizableWindInput(
         model_wind_scaling_mean, model_wind_scaling_std
     )
 
     if visualize_initial_wind:
-        optimizable_wind_input.visualize_wind(save_as_pdf)
+        visualize_wind(
+            optimizable_wind_input.weather_data,
+            time_of_year_and_day_to_timestamp(*optimizable_wind_input.time_of_year_day),
+            save_as_pdf,
+        )
 
     with ActivationMaximization(
         optimizable_wind_input, model, layer_name, layer_selection
     ).to(device) as act_max:
-        optimizer = torch.optim.Adam(act_max.parameters(), lr=0.05)
+        optimizer = torch.optim.Adam(act_max.parameters(), lr=learning_rate)
 
-        for i in range(1000):
+        for i in range(n_epochs):
             optimizer.zero_grad()
             output = act_max(None)
-            (-output).backward()
+            (loss_fn(output)).backward()
             optimizer.step()
             act_max.input.clip_wind()
             print(f"target: {output.item()}")
 
-    optimizable_wind_input.visualize_wind(save_as_pdf)
+    if visualize_end_wind:
+        visualize_wind(
+            optimizable_wind_input.weather_data,
+            time_of_year_and_day_to_timestamp(*optimizable_wind_input.time_of_year_day),
+            save_as_pdf,
+        )
+
+    return (
+        optimizable_wind_input.weather_data,
+        *optimizable_wind_input.time_of_year_day,
+        float(output.item()),
+    )
 
 
 if __name__ == "__main__":
@@ -289,6 +363,9 @@ if __name__ == "__main__":
     datasets = load_cross_val(TRAIN_DATA_PATH, TRAIN_SIZE, VAL_SIZE, verbose=True)
     model_wind_mean = datasets.wind_speed_scaler_full.mean
     model_wind_std = datasets.wind_speed_scaler_full.std
+
+    np.random.seed(SEEDS[0])
+    torch.manual_seed(SEEDS[0])
 
     MODEL_PATH = f"{CONTAINING_FOLDER}/mscEidalVesetrudUnofficial/models_test/final-model-sith-emperor-57.pth"
     (
@@ -307,12 +384,57 @@ if __name__ == "__main__":
     # layer_selection = torch.zeros(116)
     # layer_selection[42] = 1
     # layer_name = "dense_silu_2"
-    layer_name = "final_activation"
+
+    layer_name = "dense_layer_final"
+    # layer_name = "final_activation"
     layer_selection = 0
 
-    np.random.seed(70)
-    torch.manual_seed(70)
+    n_seeds = 50
 
-    run_activation_maximization(
-        model, model_wind_mean, model_wind_std, layer_name, layer_selection, device
+    combined_wind_data = np.zeros((n_seeds, 11, 13, 13, 3, 3))
+    times_of_year = np.zeros((n_seeds))
+    times_of_day = np.zeros((n_seeds))
+    end_targets = np.zeros((n_seeds))
+    print(times_of_day.shape)
+
+    for seed in range(n_seeds):
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+
+        weather_data, time_of_year, time_of_day, end_target = (
+            run_activation_maximization(
+                model,
+                model_wind_mean,
+                model_wind_std,
+                layer_name,
+                layer_selection,
+                loss_fn=lambda x: -x,
+                # loss_fn=lambda x: (0.99 - x) ** 2, # Assuming layer_name is "final_activation"
+                device=device,
+                visualize_end_wind=False,
+                n_epochs=1000,
+                learning_rate=0.015,
+            )
+        )
+
+        combined_wind_data[seed] = weather_data
+        times_of_year[seed] = time_of_year
+        times_of_day[seed] = time_of_day
+        end_targets[seed] = end_target
+
+    wind_avg, time_of_year_avg, time_of_day_avg = variability_avg_stats(
+        combined_wind_data, times_of_year, times_of_day
+    )
+    visualize_wind(
+        np.average(combined_wind_data, axis=0),
+        time_of_year_and_day_to_timestamp(time_of_year_avg, time_of_day_avg),
+    )
+    visualize_wind(
+        np.average(combined_wind_data, axis=0),
+        time_of_year_and_day_to_timestamp(time_of_year_avg, time_of_day_avg),
+        save_as_pdf=True,
+    )
+    print(f"Average end target {np.average(end_target):.4e}")
+    print(
+        f"center time: {time_of_year_and_day_to_timestamp(time_of_year_avg, time_of_day_avg)}"
     )
