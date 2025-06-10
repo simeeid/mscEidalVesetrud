@@ -298,42 +298,41 @@ This repository also includes a folder detailing the **LightGBM baseline model**
 	</details>
 </details>
 
+
+
 ---
-##  Getting Started
 
-###  Prerequisites
+## Setup Information
 
-Before getting started with mscEidalVesetrud, ensure your runtime environment meets the following requirements:
+Since this repository contains a selection of code without all the necessary data or trained models due to sensitive information and NDAs, the project isn't directly runnable. However, the core functionality of **TCAV**, **Complete Concepts**, and **Activation Maximization** is present for examination.
 
-- **Programming Language:** Python
-- **Package Manager:** Pip
+To explore the code, you'll need to set up your environment:
 
+### Prerequisites
 
-###  Installation
+Ensure your runtime environment meets these requirements:
 
-Install mscEidalVesetrud using one of the following methods:
+-   **Programming Language:** Python
+-   **Package Manager:** Pip
 
-**Build from source:**
+### Installation
 
-1. Clone the mscEidalVesetrud repository:
-```sh
-❯ git clone https://github.com/simeeid/mscEidalVesetrud
-```
+To install the project dependencies:
 
-2. Navigate to the project directory:
-```sh
-❯ cd mscEidalVesetrud
-```
+1.  Clone the `mscEidalVesetrud` repository:
+    ```sh
+    ❯ git clone https://github.com/simeeid/mscEidalVesetrud
+    ```
 
-3. Install the project dependencies:
+2.  Navigate to the project directory:
+    ```sh
+    ❯ cd mscEidalVesetrud
+    ```
 
-
-**Using `pip`** &nbsp; [<img align="center" src="https://img.shields.io/badge/Pip-3776AB.svg?style={badge_style}&logo=pypi&logoColor=white" />](https://pypi.org/project/pip/)
-
-```sh
-❯ pip install -r requirements.txt
-```
-
+3.  Install the dependencies using `pip`:
+    ```sh
+    ❯ pip install -r requirements.txt
+    ```
 
 
 ---
