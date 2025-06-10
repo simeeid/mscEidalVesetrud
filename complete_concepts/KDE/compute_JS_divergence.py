@@ -7,16 +7,16 @@ import warnings
 
 import __fix_relative_imports  # noqa: F401
 
-from mscEidalVesetrudUnofficial.global_constants import CONTAINING_FOLDER
+from mscEidalVesetrud.global_constants import CONTAINING_FOLDER
 
 warnings.filterwarnings("ignore")  # Suppress warnings for numerical stability
 
 df_positive = pd.read_csv(
-    f"{CONTAINING_FOLDER}/mscEidalVesetrudUnofficial/complete_concepts/KDE/new_df_1.csv",
+    f"{CONTAINING_FOLDER}/mscEidalVesetrud/complete_concepts/KDE/new_df_1.csv",
     index_col=0,
 )
 df_negative = pd.read_csv(
-    f"{CONTAINING_FOLDER}/mscEidalVesetrudUnofficial/complete_concepts/KDE/new_df_2.csv",
+    f"{CONTAINING_FOLDER}/mscEidalVesetrud/complete_concepts/KDE/new_df_2.csv",
     index_col=0,
 )
 

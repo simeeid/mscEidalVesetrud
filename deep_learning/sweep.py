@@ -4,19 +4,19 @@ import torch.nn as nn
 import wandb
 import numpy as np
 from functools import partial
-from mscEidalVesetrudUnofficial.data_preprocessing.prepare_load_dataset import (
+from mscEidalVesetrud.data_preprocessing.prepare_load_dataset import (
     load_cross_val,
 )
-from mscEidalVesetrudUnofficial.deep_learning.neural_nets import (
+from mscEidalVesetrud.deep_learning.neural_nets import (
     DenseNN,
     ConvNet3D,
     LSTMConv2D,
 )
-from mscEidalVesetrudUnofficial.deep_learning.train_model import (
+from mscEidalVesetrud.deep_learning.train_model import (
     train_one_epoch,
     eval_one_epoch,
 )
-from mscEidalVesetrudUnofficial.global_constants import (
+from mscEidalVesetrud.global_constants import (
     TRAIN_SIZE,
     VAL_SIZE,
     TRAIN_DATA_PATH,

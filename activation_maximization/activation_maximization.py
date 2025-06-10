@@ -5,19 +5,19 @@ import pandas as pd
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
-from mscEidalVesetrudUnofficial.deep_learning.neural_nets import IndexableModule
-from mscEidalVesetrudUnofficial.global_constants import (
+from mscEidalVesetrud.deep_learning.neural_nets import IndexableModule
+from mscEidalVesetrud.global_constants import (
     CONTAINING_FOLDER,
     SEEDS,
     TRAIN_DATA_PATH,
     TRAIN_SIZE,
     VAL_SIZE,
 )
-from mscEidalVesetrudUnofficial.deep_learning.train_model import load_checkpoint
-from mscEidalVesetrudUnofficial.data_preprocessing.prepare_load_dataset import (
+from mscEidalVesetrud.deep_learning.train_model import load_checkpoint
+from mscEidalVesetrud.data_preprocessing.prepare_load_dataset import (
     load_cross_val,
 )
-from mscEidalVesetrudUnofficial.deep_learning.visualize import (
+from mscEidalVesetrud.deep_learning.visualize import (
     plot_weather_data_medium,
     plot_weather_data_time,
 )
@@ -367,7 +367,7 @@ if __name__ == "__main__":
     np.random.seed(SEEDS[0])
     torch.manual_seed(SEEDS[0])
 
-    MODEL_PATH = f"{CONTAINING_FOLDER}/mscEidalVesetrudUnofficial/models_test/final-model-sith-emperor-57.pth"
+    MODEL_PATH = f"{CONTAINING_FOLDER}/mscEidalVesetrud/models_test/final-model-sith-emperor-57.pth"
     (
         model,
         _,

@@ -15,11 +15,11 @@ from datetime import timedelta
 
 import os
 
-from mscEidalVesetrudUnofficial.data_preprocessing.prepare_load_dataset import (
+from mscEidalVesetrud.data_preprocessing.prepare_load_dataset import (
     load_cross_val,
     load_scale_test_dataset,
 )
-from mscEidalVesetrudUnofficial.global_constants import (
+from mscEidalVesetrud.global_constants import (
     TRAIN_DATA_PATH,
     TRAIN_SIZE,
     VAL_SIZE,

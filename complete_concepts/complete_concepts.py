@@ -10,13 +10,13 @@ from collections import OrderedDict
 import random
 import shap
 
-from mscEidalVesetrudUnofficial.deep_learning.neural_nets import (
+from mscEidalVesetrud.deep_learning.neural_nets import (
     IndexableModule,
 )
-from mscEidalVesetrudUnofficial.data_preprocessing.prepare_load_dataset import (
+from mscEidalVesetrud.data_preprocessing.prepare_load_dataset import (
     load_cross_val,
 )
-from mscEidalVesetrudUnofficial.global_constants import (
+from mscEidalVesetrud.global_constants import (
     TRAIN_SIZE,
     VAL_SIZE,
     SEEDS,

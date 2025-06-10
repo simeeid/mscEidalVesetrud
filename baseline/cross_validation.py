@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections.abc import Generator
 
-from mscEidalVesetrudUnofficial.baseline.lightgbm_model import LightGBMModel
-from mscEidalVesetrudUnofficial.baseline.data_prep.paper_features import PaperFeatures
-from mscEidalVesetrudUnofficial.global_constants import TRAIN_SIZE, VAL_SIZE
+from mscEidalVesetrud.baseline.lightgbm_model import LightGBMModel
+from mscEidalVesetrud.baseline.data_prep.paper_features import PaperFeatures
+from mscEidalVesetrud.global_constants import TRAIN_SIZE, VAL_SIZE
 
 
 class CrossValidation:

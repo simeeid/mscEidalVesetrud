@@ -40,13 +40,11 @@ SEEDS = [42, 43, 44, 45, 46]
 
 
 SHADOW_MAP_30_BY_30_PATH = (
-    CONTAINING_FOLDER
-    + "/mscEidalVesetrudUnofficial/resources/RoanShadowMap30by30km.png"
+    CONTAINING_FOLDER + "/mscEidalVesetrud/resources/RoanShadowMap30by30km.png"
 )
 SHADOW_MAP_35_BY_35_PATH = (
-    CONTAINING_FOLDER
-    + "/mscEidalVesetrudUnofficial/resources/RoanShadowMap35by35km.png"
+    CONTAINING_FOLDER + "/mscEidalVesetrud/resources/RoanShadowMap35by35km.png"
 )
 WIND_TURBINES_IMAGE = (
-    CONTAINING_FOLDER + "/mscEidalVesetrudUnofficial/resources/wind_turbines_image.png"
+    CONTAINING_FOLDER + "/mscEidalVesetrud/resources/wind_turbines_image.png"
 )
