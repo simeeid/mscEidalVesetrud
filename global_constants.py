@@ -3,6 +3,7 @@ import os
 CONTAINING_FOLDER = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 MODEL_FOLDER = CONTAINING_FOLDER + "/models"
 DATA_FOLDER = CONTAINING_FOLDER + "/data"
+
 WEATHER_DATA_PATH = DATA_FOLDER + "/calc_time_all_data_combined.csv"
 PROD_DATA_PATH = DATA_FOLDER + "/prod_avl_downreg.csv"
 EARLY_WTGS_AVL_DATA_PATH = DATA_FOLDER + "/roan_available_wtgs.csv"
