@@ -27,7 +27,7 @@ This repository contains a selection of the Python code developed as part of a M
 - [ Repository Content](#repository-content-methods-for-interpretable-deep-learning)
 - [ Project Structure](#project-structure)
   - [ Project Index](#project-index)
-- [ Getting Started](#getting-started)
+- [ Setup Information](#setup-information)
   - [ Prerequisites](#prerequisites)
   - [ Installation](#installation)
 - [ License](#license)
